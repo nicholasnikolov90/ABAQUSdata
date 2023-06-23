@@ -5,8 +5,9 @@ filename = 'points_wires.py'
 pd.set_option('display.max_colwidth', None)
 
 while(True):
-    model_name = input("Enter the model name (e.g. Model-1): ")
-    part_name = input("Enter the part name (e.g. Part-1): ")
+    model_name = 'Model-1' #input("Enter the model name (e.g. Model-1): ")
+    part_name = 'Part-1'#input("Enter the part name (e.g. Part-1): ")
+    pipe_size = 1.2192#input("Enter the pipe outer diameter used to calculate the bending radius (e.g. 1.2192m): ")
     break
 
 coordinates = pd.read_excel("coordinates.xlsx")
@@ -35,8 +36,48 @@ for i in range(coordinates.index.max()+3, coordinates.index.max()*2+2):
 import_header = pd.Series(['from part import *','from material import *','from section import *','from assembly import *','from step import *','from interaction import *','from load import *','from mesh import *','from optimization import *','from job import *','from sketch import *','from visualization import *','from connectorBehavior import *','',f"mdb.Model(modelType=STANDARD_EXPLICIT, name='{model_name}')",f"mdb.models['{model_name}'].Part(dimensionality=THREE_D, name='{part_name}',type=DEFORMABLE_BODY)", ''])
 
 points_wires = pd.concat([import_header, points_wires], ignore_index=True)
-points_wires = points_wires.to_string(index=False)
 
+#create Magnitude
+bends = pd.DataFrame()
+bends['Magnitude'] = np.sqrt(coordinates['x']**2 + coordinates['y']**2 + coordinates['z']**2)
+
+#normalize all directions
+bends['xn'] = coordinates['x'] / bends['Magnitude']
+bends['yn'] = coordinates['y'] / bends['Magnitude']
+bends['zn'] = coordinates['z'] / bends['Magnitude']
+
+#create dot product between points
+#initialize columns
+bends['dotProduct'] = 0
+bends['angleDeg'] = 0
+bends['bendRadius'] = 0
+
+#calculate dot product, angles between wires and bending radius
+for i in range(1, bends.index.max() + 1): 
+    bends['dotProduct'].at[i] = round(bends['xn'].at[i-1]*bends['xn'].at[i] + bends['yn'].at[i-1]*bends['yn'].at[i] + bends['zn'].at[i-1]*bends['zn'].at[i], 8)
+    bends['angleDeg'].at[i] = round(np.degrees(np.arccos(bends['dotProduct'].at[i])), 1)
+    if bends['angleDeg'].at[i] < 1:
+        bends['angleDeg'].at[i] = 0
+        
+        #create bending radius conditions
+    if bends['angleDeg'].at[i] < 1:
+        bends['bendRadius'].at[i] = 0
+    elif bends['angleDeg'].at[i] <= 12:
+        bends['bendRadius'].at[i] = 57 * pipe_size
+    elif bends['angleDeg'].at[i] <= 60:
+        bends['bendRadius'].at[i] = 5 * pipe_size
+    else:
+        bends['bendRadius'].at[i] = 3 * pipe_size
+    
+     
+for i in range(points_wires.index.max()+1): 
+        points_wires.at[i] = f"mdb.models['{model_name}'].parts['{part_name}'].WirePolyLine(mergeType=IMPRINT, meshable=ON, points=((mdb.models['{model_name}'].parts['{part_name}'].datums[{i-1-coordinates.index.max()}],mdb.models['{model_name}'].parts['{part_name}'].datums[{i-coordinates.index.max()}]), ))"
+
+
+
+print(bends)
+
+points_wires = points_wires.to_string(index=False) #force all to string, so it can be written to python file
 #save points and wires to a .py file
 with open(filename, 'w') as f:
     for line in points_wires.split('\n'):
