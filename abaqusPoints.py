@@ -63,29 +63,30 @@ for i in range(1, bends.index.max() + 1):
     if bends['angleDeg'].at[i] < 1:
         bends['bendRadius'].at[i] = 0
     elif bends['angleDeg'].at[i] <= 12:
-        bends['bendRadius'].at[i] = 57 * pipe_size
+        bends['bendRadius'].at[i] = round(57 * pipe_size, 4)
     elif bends['angleDeg'].at[i] <= 60:
-        bends['bendRadius'].at[i] = 5 * pipe_size
+        bends['bendRadius'].at[i] = round(5 * pipe_size, 4)
     else:
-        bends['bendRadius'].at[i] = 3 * pipe_size
+        bends['bendRadius'].at[i] = round(3 * pipe_size, 4)
     
-     
-for i in range(points_wires.index.max()+1): 
-    points_wires.at[i] = f"mdb.models['{model_name}'].parts['{part_name}'].WirePolyLine(mergeType=IMPRINT, meshable=ON, points=((mdb.models['{model_name}'].parts['{part_name}'].datums[{i-1-coordinates.index.max()}],mdb.models['{model_name}'].parts['{part_name}'].datums[{i-coordinates.index.max()}]), ))"
-
 #add rounding for the bends
-for i in range(points_wires.index.max() + 1):
-    current_x = 
-    current_y = 
-    current_z = 
-    points_wires.at[i] = f"mdb.models['{model_name}'].parts['{part_name}'].Round(radius=3.6576, vertexList=(mdb.models['{model_name}'].parts['{part_name}'].vertices.findAt((-48.33024,1.172,62.0008), ), ))"
+bend_radius = pd.Series()
+current_x = 0
+current_y = 0
+current_z = 0
 
+for i in range(bends.index.max() + 1):
+    current_x += coordinates['x'].at[i]
+    current_y += coordinates['y'].at[i]
+    current_z += coordinates['z'].at[i]
+    
+    if bends['bendRadius'].at[i] > 0:
+        bend_radius.at[i] = f"mdb.models['{model_name}'].parts['{part_name}'].Round(radius={bends['bendRadius'].at[i]}, vertexList=(mdb.models['{model_name}'].parts['{part_name}'].vertices.findAt(({current_x},{current_y},{current_z}), ), ))"
 
-print(bends)
-
+total_abaqus_script = pd.concat([points_wires,bend_radius]).to_string(index=False)
 points_wires = points_wires.to_string(index=False) #force all to string, so it can be written to python file
 #save points and wires to a .py file
 with open(filename, 'w') as f:
-    for line in points_wires.split('\n'):
+    for line in total_abaqus_script.split('\n'):
         f.write(line.strip() + '\n')
 
