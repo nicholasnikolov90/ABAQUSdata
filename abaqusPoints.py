@@ -73,6 +73,12 @@ for i in range(1, bends.index.max() + 1):
 for i in range(points_wires.index.max()+1): 
     points_wires.at[i] = f"mdb.models['{model_name}'].parts['{part_name}'].WirePolyLine(mergeType=IMPRINT, meshable=ON, points=((mdb.models['{model_name}'].parts['{part_name}'].datums[{i-1-coordinates.index.max()}],mdb.models['{model_name}'].parts['{part_name}'].datums[{i-coordinates.index.max()}]), ))"
 
+#add rounding for the bends
+for i in range(points_wires.index.max() + 1):
+    current_x = 
+    current_y = 
+    current_z = 
+    points_wires.at[i] = f"mdb.models['{model_name}'].parts['{part_name}'].Round(radius=3.6576, vertexList=(mdb.models['{model_name}'].parts['{part_name}'].vertices.findAt((-48.33024,1.172,62.0008), ), ))"
 
 
 print(bends)
