@@ -5,9 +5,9 @@ filename = 'points_wires.py'
 pd.set_option('display.max_colwidth', None)
 
 while(True):
-    model_name = 'Model-1' #input("Enter the model name (e.g. Model-1): ")
-    part_name = 'Part-1'#input("Enter the part name (e.g. Part-1): ")
-    pipe_size = 1.2192#input("Enter the pipe outer diameter used to calculate the bending radius (e.g. 1.2192m): ")
+    model_name = str(input("Enter the model name (e.g. Model-1): "))
+    part_name = str(input("Enter the part name (e.g. Part-1): "))
+    pipe_size = float(input("Enter the pipe outer diameter (in meters) used to calculate the bending radius (e.g. 1.2192): "))
     break
 
 coordinates = pd.read_excel("coordinates.xlsx")
