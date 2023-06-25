@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-filename = 'points_wires.py'
+filename = 'abaqus_script.py'
 pd.set_option('display.max_colwidth', None)
 
 while(True):
@@ -10,11 +10,7 @@ while(True):
     pipe_size = float(input("Enter the pipe outer diameter (in meters) used to calculate the bending radius (e.g. 1.2192): "))
     break
 
-coordinates = pd.read_excel("coordinates.xlsx")
-coordinates.columns.values[0] = 'x'
-coordinates.columns.values[1] = 'y'
-coordinates.columns.values[2] = 'z'
-coordinates = coordinates.fillna(0).div(1000).sort_index()
+coordinates = pd.read_excel("coordinates.xlsx", names=['x', 'y', 'z']).fillna(0).div(1000).sort_index()
 
 points_wires = pd.Series() #initialize series object
 #Initialize first two unique rows of points
@@ -42,9 +38,7 @@ bends = pd.DataFrame()
 bends['Magnitude'] = np.sqrt(coordinates['x']**2 + coordinates['y']**2 + coordinates['z']**2)
 
 #normalize all directions
-bends['xn'] = coordinates['x'] / bends['Magnitude']
-bends['yn'] = coordinates['y'] / bends['Magnitude']
-bends['zn'] = coordinates['z'] / bends['Magnitude']
+bends[['xn', 'yn', 'zn']] = coordinates[['x', 'y', 'z']].div(bends['Magnitude'], axis=0)
 
 #create dot product between points
 #initialize columns
@@ -56,10 +50,8 @@ bends['bendRadius'] = 0
 for i in range(1, bends.index.max() + 1): 
     bends['dotProduct'].at[i] = round(bends['xn'].at[i-1]*bends['xn'].at[i] + bends['yn'].at[i-1]*bends['yn'].at[i] + bends['zn'].at[i-1]*bends['zn'].at[i], 8)
     bends['angleDeg'].at[i] = round(np.degrees(np.arccos(bends['dotProduct'].at[i])), 1)
-    if bends['angleDeg'].at[i] < 1:
-        bends['angleDeg'].at[i] = 0
-        
-        #create bending radius conditions
+
+    #create bending radius conditions
     if bends['angleDeg'].at[i] < 1:
         bends['bendRadius'].at[i] = 0
     elif bends['angleDeg'].at[i] <= 12:
@@ -71,21 +63,15 @@ for i in range(1, bends.index.max() + 1):
     
 #add rounding for the bends
 bend_radius = pd.Series()
-current_x = 0
-current_y = 0
-current_z = 0
 
 for i in range(bends.index.max() + 1):
-    current_x += coordinates['x'].at[i]
-    current_y += coordinates['y'].at[i]
-    current_z += coordinates['z'].at[i]
-    
     if bends['bendRadius'].at[i] > 0:
-        bend_radius.at[i] = f"mdb.models['{model_name}'].parts['{part_name}'].Round(radius={bends['bendRadius'].at[i]}, vertexList=(mdb.models['{model_name}'].parts['{part_name}'].vertices.findAt(({current_x},{current_y},{current_z}), ), ))"
+        bend_radius.at[i] = f"mdb.models['{model_name}'].parts['{part_name}'].Round(radius={bends['bendRadius'].at[i]}, vertexList=(mdb.models['{model_name}'].parts['{part_name}'].vertices.findAt(({coordinates['x'].cumsum().at[i]},{coordinates['y'].cumsum().at[i]},{coordinates['z'].cumsum().at[i]}), ), ))"
 
 total_abaqus_script = pd.concat([points_wires,bend_radius]).to_string(index=False)
 points_wires = points_wires.to_string(index=False) #force all to string, so it can be written to python file
 #save points and wires to a .py file
+
 with open(filename, 'w') as f:
     for line in total_abaqus_script.split('\n'):
         f.write(line.strip() + '\n')
