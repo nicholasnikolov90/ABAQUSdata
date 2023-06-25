@@ -12,7 +12,7 @@ while(True):
 
 coordinates = pd.read_excel("coordinates.xlsx", names=['x', 'y', 'z']).fillna(0).div(1000).sort_index()
 
-points_wires = pd.Series() #initialize series object
+points_wires = pd.Series(dtype='float64') #initialize series object
 #Initialize first two unique rows of points
 points_wires.at[0] = f"mdb.models['{model_name}'].parts['{part_name}'].ReferencePoint(point=({coordinates.loc[0, 'x']},{coordinates.loc[0, 'y']},{coordinates.loc[0, 'z']}))"
 points_wires.at[1] = f"mdb.models['{model_name}'].parts['{part_name}'].DatumPointByOffset(point=mdb.models['{model_name}'].parts['{part_name}'].referencePoints[1], vector=({coordinates.loc[1, 'x']},{coordinates.loc[1, 'y']},{coordinates.loc[1, 'z']}))"
@@ -62,11 +62,11 @@ for i in range(1, bends.index.max() + 1):
         bends['bendRadius'].at[i] = round(3 * pipe_size, 4)
     
 #add rounding for the bends
-bend_radius = pd.Series()
+bend_radius = pd.Series(dtype='float64')
 
 for i in range(bends.index.max() + 1):
     if bends['bendRadius'].at[i] > 0:
-        bend_radius.at[i] = f"mdb.models['{model_name}'].parts['{part_name}'].Round(radius={bends['bendRadius'].at[i]}, vertexList=(mdb.models['{model_name}'].parts['{part_name}'].vertices.findAt(({coordinates['x'].cumsum().at[i]},{coordinates['y'].cumsum().at[i]},{coordinates['z'].cumsum().at[i]}), ), ))"
+        bend_radius.at[i] = f"mdb.models['{model_name}'].parts['{part_name}'].Round(radius={bends['bendRadius'].at[i]}, vertexList=(mdb.models['{model_name}'].parts['{part_name}'].vertices.findAt(({coordinates['x'].cumsum().at[i-1]},{coordinates['y'].cumsum().at[i-1]},{coordinates['z'].cumsum().at[i-1]}), ), ))"
 
 total_abaqus_script = pd.concat([points_wires,bend_radius]).to_string(index=False)
 points_wires = points_wires.to_string(index=False) #force all to string, so it can be written to python file
