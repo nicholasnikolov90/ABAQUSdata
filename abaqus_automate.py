@@ -4,13 +4,18 @@ import numpy as np
 filename = 'abaqus_script.py'
 pd.set_option('display.max_colwidth', None)
 
-while(True):
-    model_name = str(input("Enter the model name (e.g. Model-1): "))
-    part_name = str(input("Enter the part name (e.g. Part-1): "))
-    pipe_size = float(input("Enter the pipe outer diameter (in meters) used to calculate the bending radius (e.g. 1.2192): "))
-    break
+#uncomment if want to do it as a CLI
+# while(True):
+#     model_name = str(input("Enter the model name (e.g. Model-1): "))
+#     part_name = str(input("Enter the part name (e.g. Part-1): "))
+#     pipe_size = float(input("Enter the pipe outer diameter (in meters) used to calculate the bending radius (e.g. 1.2192): "))
+#     break
 
 coordinates = pd.read_excel("coordinates.xlsx", names=['x', 'y', 'z']).fillna(0).div(1000).sort_index()
+inputs = pd.read_excel("inputs.xlsx", names=['model_name', 'part_name', 'pipe_size'])
+model_name = inputs['model_name'].at[0]
+part_name = inputs['part_name'].at[0]
+pipe_size = inputs['pipe_size'].at[0]
 
 points_wires = pd.Series(dtype='float64') #initialize series object
 #Initialize first two unique rows of points
