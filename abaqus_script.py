@@ -252,7 +252,6 @@ mdb.models['Model-1'].parts['Part-1'].WirePolyLine(mergeType=IMPRINT, meshable=O
 mdb.models['Model-1'].parts['Part-1'].WirePolyLine(mergeType=IMPRINT, meshable=ON, points=((mdb.models['Model-1'].parts['Part-1'].datums[116],mdb.models['Model-1'].parts['Part-1'].datums[117]), ))
 mdb.models['Model-1'].parts['Part-1'].WirePolyLine(mergeType=IMPRINT, meshable=ON, points=((mdb.models['Model-1'].parts['Part-1'].datums[117],mdb.models['Model-1'].parts['Part-1'].datums[118]), ))
 mdb.models['Model-1'].parts['Part-1'].WirePolyLine(mergeType=IMPRINT, meshable=ON, points=((mdb.models['Model-1'].parts['Part-1'].datums[118],mdb.models['Model-1'].parts['Part-1'].datums[119]), ))
-mdb.models['Model-1'].parts['Part-1'].Round(radius=6.096, vertexList=(mdb.models['Model-1'].parts['Part-1'].vertices.findAt((-30.60164,1.172,58.887809999999995), ), ))
 mdb.models['Model-1'].parts['Part-1'].Round(radius=3.6576, vertexList=(mdb.models['Model-1'].parts['Part-1'].vertices.findAt((-48.33024,1.172,62.0008), ), ))
 mdb.models['Model-1'].parts['Part-1'].Round(radius=3.6576, vertexList=(mdb.models['Model-1'].parts['Part-1'].vertices.findAt((-52.957510000000006,0.0,35.64592), ), ))
 mdb.models['Model-1'].parts['Part-1'].Round(radius=69.4944, vertexList=(mdb.models['Model-1'].parts['Part-1'].vertices.findAt((-169.90248,0.0,56.196009999999994), ), ))
